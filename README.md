@@ -3,7 +3,7 @@ ML
 ---
 here will show some code about machine learning writing by python.
 
-个人博客：http://120.77.246.8 欢迎来访和留言
+个人博客：http://www.leslie2018.com 欢迎来访和留言
 
 ### 文件说明
 
