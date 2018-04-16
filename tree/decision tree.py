@@ -1,8 +1,10 @@
 from math import log
-import operator
-import matplotlib.pyplot as plt
-from mnist.minst_data import mnist
+from sklearn.datasets import load_iris
 import numpy as np
+from sklearn.model_selection import train_test_split
+from plot_tree import create_plot_tree
+
+
 """
 决策树是根据每一次抽取信息增益最大的特征值而进行分类的
 力求每一次分类后，两部分尽可能的各自为一个类别
@@ -56,6 +58,8 @@ def major_cnt(class_list):   # 多数选举策略
     class_count = {}
     for vote in class_list:
         class_count[vote] = class_count.get(vote, 0) + 1
+    print(class_count)
+    input()
     sorted_class_count = sorted(class_count.items(),
                                 key=operator.itemgetter(1), reverse=True)
     return sorted_class_count[0][0]   # 返回出现次数最多的类
@@ -80,92 +84,6 @@ def create_tree(data_set, labels):  # 创建决策树
     return my_tree
 
 
-decision_node = dict(boxstyle='sawtooth', fc='0.8')   # 判断结点
-leaf_node = dict(boxstyle='round4',fc='0.8')    # 叶子结点
-arrow_args = dict(arrowstyle='<-')  # 箭头
-
-
-def plot_node(node_txt, center_pt, parent_pt, node_type):  # 画图
-    create_plot.ax1.annotate(node_txt, xy=parent_pt, xycoords='axes fraction',
-                             xytext=center_pt, textcoords='axes fraction',
-                             va='center', ha='center', bbox=node_type, arrowprops=arrow_args)
-
-
-def create_plot():
-    fig = plt.figure(1, facecolor='white')
-    fig.clf()
-    create_plot.ax1 = plt.subplot(111, frameon=False)
-    plot_node('a decision node', (0.5, 0.1), (0.1, 0.5), decision_node)
-    plot_node('a leaf node ', (0.8, 0.1), (0.3, 0.8), leaf_node)
-    plt.show()
-
-
-def get_num_leaf(my_tree):  # 获得叶子结点数目
-    num_leafs = 0  # 叶子结点数目
-    first_str = list(my_tree.keys())[0]   # 获取第一个键值， 需要转列表
-    second_dict = my_tree[first_str]  # 获取嵌套字典
-    for key in second_dict.keys():  # 对于内嵌字典
-        if type(second_dict[key]).__name__ == 'dict':  # 如果是字典而是而不是值（类别），则继续递归
-            num_leafs += get_num_leaf(second_dict[key])
-        else:
-            num_leafs += 1
-    return num_leafs
-
-
-def get_tree_depth(my_tree):  # 获得树深度
-    max_depth = 0
-    first_str = list(my_tree.keys())[0]
-    second_dict = my_tree[first_str]
-    for key in second_dict.keys():
-        if type(second_dict[key]).__name__ == 'dict':
-            this_depth = 1 + get_tree_depth(second_dict[key])
-        else:
-            this_depth = 1
-        if this_depth > max_depth:
-            max_depth = this_depth
-    return max_depth
-
-
-def plot_mid_test(cntr_pt, parent_pt, txt_string):
-    x_mid = (parent_pt[0] - cntr_pt[0])/2.0 + cntr_pt[0]
-    y_mid = (parent_pt[1] - cntr_pt[1])/2.0 + cntr_pt[1]
-    create_plot.ax1.text(x_mid, y_mid, txt_string)
-
-
-def plot_tree(my_tree, parent_pt, node_txt):
-    num_leafs = get_num_leaf(my_tree)
-    depth = get_tree_depth(my_tree)
-    first_str = list(my_tree.keys())[0]
-    cntr_pt = (plot_tree.xOff + (1.0 + float(num_leafs))/2.0/plot_tree.total_w,
-               plot_tree.yOff)
-    plot_mid_test(cntr_pt, parent_pt, node_txt)
-    plot_node(first_str, cntr_pt, parent_pt, decision_node)
-    second_dict = my_tree[first_str]
-    plot_tree.yOff = plot_tree.yOff - 1.0/plot_tree.total_d
-    for key in second_dict.keys():
-        if type(second_dict[key]).__name__ == 'dict':
-            plot_tree(second_dict[key], cntr_pt, str(key))
-        else:
-            plot_tree.xOff = plot_tree.xOff + 1.0/plot_tree.total_w
-            plot_node(second_dict[key], (plot_tree.xOff, plot_tree.yOff),
-                      cntr_pt, leaf_node)
-            plot_mid_test((plot_tree.xOff, plot_tree.yOff), cntr_pt, str(key))
-    plot_tree.yOff = plot_tree.yOff = 1.0/plot_tree.total_d
-
-
-def create_plot_tree(in_tree):
-    fig = plt.figure(1, facecolor='white')
-    fig.clf()
-    axprops = dict(xticks=[], yticks=[])
-    create_plot.ax1 = plt.subplot(111, frameon=False, **axprops)
-    plot_tree.total_w = float(get_num_leaf(in_tree))
-    plot_tree.total_d = float(get_tree_depth(in_tree))
-    plot_tree.xOff = -0.5/plot_tree.total_w
-    plot_tree.yOff = 1.0
-    plot_tree(in_tree, (0.5, 1.0), '')
-    plt.show()
-
-
 def classify(input_tree, feat_labels, test_vec):  # 获得测试样本分类
     first_str = list(input_tree.keys())[0]  # 获得树第一个特征值名称
     second_dict = input_tree[first_str]  # 获得类或子树
@@ -176,7 +94,7 @@ def classify(input_tree, feat_labels, test_vec):  # 获得测试样本分类
                 class_label = classify(second_dict[key], feat_labels, test_vec)
             else:
                 class_label = second_dict[key]  # 如果是类，返回这个类
-    return class_label
+        return class_label
 
 
 def store_tree(input_tree, filename):  # 存储树
@@ -191,28 +109,21 @@ def grab_tree(filename):  # 读取树
     fr = open(filename)
     return pickle.load(fr)
 
-#create_plot_tree(tree)
-
-train_x, train_y, test_x, test_y = mnist()
-
-labels = list(range(784))
-
-#data2 = []
-
-#for i in range(len(test_y)):
-#    data2.append(list(test_x[i]))
-#    k = test_y[i]
-#    data2[i].extend([k])
-
-#tree = create_tree(data2, labels)
-
-#store_tree(tree,'tree')
 
 
+X, Y = load_iris().data, load_iris().target
+train_x, test_x, train_y, test_y = train_test_split(X, Y)
 
-print(classify(tree, labels, train_x[1]))
+data = np.column_stack((train_x, train_y))
 
-def test(train_x,train_y, input_tree,labels):
+label_new = [0, 1, 2, 3]
+
+tree = create_tree(data, label_new)
+create_plot_tree(tree)
+print(tree)
+
+
+def test(train_x, train_y, input_tree,labels):
     error_count = 0
     for i in range(len(train_x)):
         result = classify(input_tree, labels, train_x[i])
@@ -220,4 +131,5 @@ def test(train_x,train_y, input_tree,labels):
             error_count += 1
     print('the error rate is %f' % (error_count/len(train_y)))
 
-test(train_x, train_y, tree, labels)
+
+test(train_x, train_y, tree, label_new)
