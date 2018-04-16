@@ -1,7 +1,7 @@
 
 ML
 ---
-here will show some code about machine learning writing by python.
+here will show some code about machine learning by using python.
 
 个人博客：http://www.leslie2018.com 欢迎来访和留言
 
