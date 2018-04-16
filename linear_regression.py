@@ -52,8 +52,7 @@ class Linear_Regress:
             loss_value = self.loss(n_sample, self.obs_func(theta, x), y)  # print the loss value in each iteration
             print(loss_value)
             for t_x, t_y in zip(x, y):  # for each x and y
-                for j in range(n_feature):  # for each parameter in theta
-                    theta[j] = theta[j] + self.rate * (t_y-self.ob_func(theta, t_x)) * t_x[j]
+                    theta = theta + self.rate * (t_y-self.ob_func(theta, t_x)) * t_x
         return theta
 
     def fit(self, X, y):  # starting training the model
