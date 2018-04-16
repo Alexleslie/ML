@@ -2,12 +2,6 @@ from sklearn.datasets import load_diabetes
 from ch2.cross_validate import cross
 import numpy as np
 
-
-iris = load_diabetes()
-
-train_x, train_y, test_x, test_y = cross(iris.data, iris.target)
-
-
 class Linear_Regress:
     def __init__(self, rate, iters):
         '''
@@ -69,13 +63,17 @@ class Linear_Regress:
         return y
 
 
-rge = Linear_Regress(0.01, 400)
-theta = rge.fit(train_x, train_y)
-predict = rge.prefict(test_x)
 
+if __name__ == '__main__':
+    iris = load_diabetes()
+    train_x, train_y, test_x, test_y = cross(iris.data, iris.target)
 
-for x, y in zip(predict, test_y):
-    print(str(x) + ' ---- ' + str(y))
+    rge = Linear_Regress(0.01, 400)
+    theta = rge.fit(train_x, train_y)
+    predict = rge.prefict(test_x)
+
+    for x, y in zip(predict, test_y):
+        print(str(x) + ' ---- ' + str(y))
 
 
 

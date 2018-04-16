@@ -2,8 +2,6 @@ import random
 from sklearn.svm import SVC
 
 
-train_x = [[0,0],[1,1],[1,2],[2,3],[2,1],[100,100],[30,40],[20,20],[10,10],[20,10]]
-train_y = [1,1,1,1,1,0,0,0,0,0]
 
 def accuracy(predict, y):
     '''
@@ -12,7 +10,7 @@ def accuracy(predict, y):
     :param y:  真实情况
     :return:  查准率，查全率
     '''
-    print(predict, 'y', y)
+
     TP = [y[i] for i in range(len(y)) if y[i] == 1 and y[i] == predict[i]]
     FP = [y[i] for i in range(len(y)) if y[i] != 0 and y[i] != predict[i]]
     FN = [y[i] for i in range(len(y)) if y[i] == 1 and y[i] != predict[i]]
@@ -75,10 +73,5 @@ def k_fork(X, y, cls, k=2):
     return sum(acc)/len(acc)
 
 
-#train_X, train_Y, test_X, test_y = cross(train_x, train_y,0)
-
-acc = k_fork(train_x, train_y, SVC())
-
-print(acc)
 
 
