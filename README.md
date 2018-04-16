@@ -10,8 +10,8 @@ here will show some code about machine learning by using python.
 + matlab
   + 吴恩达机器学习教程个人代码总结和学习记录
 + 模型实现
-  + cross_validate : split one dateset to two datesets - train and test ； Accuracy  
-  + Linear model : 线性回归和逻辑回归
+  + cross_validate : split one dateset to two datesets - train and test ； Accuracy  
+  + Linear model : 线性回归和逻辑回归
   + CNN_mnist : 利用tensorflow实现一个2层卷积神经网络
   + decision_tree: ’原生‘决策树
   + KNN: K 近邻
