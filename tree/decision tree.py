@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from plot_tree import create_plot_tree
 import operator
-from cross_validate import accuracy
+from cross_validate import *
 
 
 """
@@ -13,6 +13,7 @@ from cross_validate import accuracy
 """
 
 class Decision_Tree:
+
     def data_process(self, X):
         n = len(X[0])
         self.mean = np.zeros(n)
@@ -26,16 +27,14 @@ class Decision_Tree:
         return X
 
     def data_process2(self, X):
-        result_list = []
-        for i, j in zip(self.mean, X):
-            if i > j:
-                result_list.append(0)
+        for i in range(len(X)):
+            if X[i] > self.mean[i]:
+                X[i] = 1
             else:
-                result_list.append(1)
-        return result_list
+                X[i] = 0
+        return X
 
-
-    def merge(self,X,y):
+    def merge(self,X,y):  # 合并X 与 y
         return np.column_stack((X,y))
 
     def calc_shannon_ent(self, data_set):  # 计算香农熵
@@ -83,19 +82,19 @@ class Decision_Tree:
             class_count[vote] = class_count.get(vote, 0) + 1
         sorted_class_count = sorted(class_count.items(),
                                     key=operator.itemgetter(1), reverse=True)
-        return sorted_class_count[0][0]   # 返回出现次数最多的类
+        return int(sorted_class_count[0][0])   # 返回出现次数最多的类
 
     def create_tree(self, data_set, labels):  # 创建决策树
         class_list = [example[-1] for example in data_set]  # 获得当前数据集类标签
         if class_list.count(class_list[0]) == len(class_list):  # 如果只剩下一个类，返回这个类
             return class_list[0]
-        if len(data_set[0]) == 1:  # 如果只剩下一个特征值， 返回出现次数最多的类
+        if len(data_set[0]) == 2:  # 如果只剩下一个特征值， 返回出现次数最多的类
             return self.major_cnt(class_list)
         best_feat = self.choose_best_feature_to_split(data_set)  # 获得最好的特征值
         best_feat_label = labels[best_feat]   # 获得当前特征值名称
         my_tree = {best_feat_label:{}}  # 以嵌套字典形式创建树
         del(labels[best_feat])  # 删除抽取之后的特征值的名称
-        feat_value = [i[best_feat] for i in data_set]  # 获得所有当前被抽取特征值的值
+        feat_value = [i [best_feat] for i in data_set]  # 获得所有当前被抽取特征值的值
         unique_vals = set(feat_value)
         for value in unique_vals:   # 对于每一个值来说，继续下一步的嵌套
             sub_labels = labels[:]
@@ -108,24 +107,23 @@ class Decision_Tree:
         second_dict = input_tree[first_str]  # 获得类或子树
         feat_index = feat_labels.index(first_str)  # 获取当前特征值索引
         for key in second_dict.keys():  # 对于所有值
-            if int(test_vec[feat_index]) == int(key):  # 找到对于特征值
+            if test_vec[feat_index] == key:  # 找到对于特征值
                 if type(second_dict[key]).__name__ == 'dict':  # 如果还是子树，递归
                     class_label = self.classify(second_dict[key], feat_labels, test_vec)
-                    return class_label
                 else:
                     class_label = second_dict[key]  # 如果是类，返回这个类
-                    return class_label
+        return class_label
 
 
-    def fit(self, X, y, label):
-        self.label = list(label)
-        X = self.data_process(X)
+    def fit(self, X, y, label):  # 调用函数，训练模型
+        self.label = list(label)  # 设定一个类属性 label
+        X = self.data_process(X)  # 数据预处理
         merged_data = self.merge(X, y)
-        self.tree = self.create_tree(merged_data, label)
+        self.tree = self.create_tree(merged_data, label) # 生成树
 
     def predict(self, X):
         predict_list = []
-        for i in X:
+        for i in X:  # 对每一个做分类
             x = self.data_process2(i)
             class_name = self.classify(self.tree, self.label, x)
             predict_list.append(class_name)
@@ -149,14 +147,16 @@ class Decision_Tree:
 if __name__ == '__main__':
     X, Y = load_iris().data, load_iris().target
     label_name = load_iris().feature_names
-    train_x, test_x, train_y, test_y = train_test_split(X, Y)
+    train_x, test_x, train_y, test_y = train_test_split(X, Y, train_size=0.8)
+
     tree_clf = Decision_Tree()
     tree_clf.fit(train_x, train_y, label_name)
-
     prediction = tree_clf.predict(test_x)
 
-    print(prediction)
+    print(tree_clf.tree)
+    tree_clf.plant_tree()
     print(accuracy(prediction, test_y))
+
 
 
 

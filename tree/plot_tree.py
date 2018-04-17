@@ -74,7 +74,7 @@ def plot_tree(my_tree, parent_pt, node_txt):
 
 
 def create_plot_tree(in_tree):
-    fig = plt.figure(1, facecolor='white')
+    fig = plt.figure(1, facecolor='white',figsize=(8,8))
     fig.clf()
     axprops = dict(xticks=[], yticks=[])
     create_plot.ax1 = plt.subplot(111, frameon=False, **axprops)
