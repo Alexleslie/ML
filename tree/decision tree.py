@@ -13,7 +13,6 @@ from cross_validate import *
 """
 
 class Decision_Tree:
-
     def data_process(self, X):
         n = len(X[0])
         self.mean = np.zeros(n)
