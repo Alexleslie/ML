@@ -2,7 +2,6 @@ import random
 from sklearn.svm import SVC
 
 
-
 def accuracy(predict, y):
     '''
     分类结果混淆矩阵
