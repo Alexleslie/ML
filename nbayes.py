@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 
 
 class Navie_bayes:
-    def data_process(self, X):
+    def data_process(self, X):   # 数据处理
         n = len(X[0])
         self.mean = np.zeros(n)
         for i in range(n):
@@ -22,22 +22,22 @@ class Navie_bayes:
         num_sample = len(train_x)
         num_class = len(set(train_y))
         class_dict = {}
-        for i in train_y:
+        for i in train_y:  # 获得每个类的总个数
             class_dict[str(i)] = class_dict.get(str(i), 0) + 1
-        p_class = {i : (class_dict[i]+1)/(num_sample + num_class) for i in class_dict.keys()}
-        proba_martix = np.zeros((num_class, num_feature))
+        p_class = {i : (class_dict[i]+1)/(num_sample + num_class) for i in class_dict.keys()}  # 计算每个类的概率 运用拉普拉斯平滑
+        proba_martix = np.zeros((num_class, num_feature))  # 初始化一个存放预测概率的矩阵
 
-        for i in range(num_feature):
+        for i in range(num_feature):  # 对于每一个特征，一次循环计算一次条件概率
             feature = test_x[i]
             N_i = len(set(train_x[i]))
             q = 0
-            for j in class_dict.keys():
+            for j in class_dict.keys():  # 对于每一个类，计算该特征的次数，从而计算出概率
                 value_list = np.sum([1 for k in range(num_sample) if train_x[k][i] == feature and train_y[k] == int(j)])
                 proba_martix[q][i] = (value_list + 1) / (class_dict[j] + N_i)
                 q += 1
         return proba_martix, p_class
 
-    def classify(self, p, class_p):
+    def classify(self, p, class_p):  # 基于求出的概率比较大小，从而分类
         num_class = len(p)
         class_list = np.zeros(num_class)
         c = 0
