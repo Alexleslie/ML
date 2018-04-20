@@ -77,15 +77,10 @@ def smo_simple(data_mat, class_label, C, toler, maxiter):
     return b, alphas
 
 
-if __name__ == '__main__':
-    b, alpha = smo_simple(data_x, y, 1, 0.1, 400)
-    print(alpha[alpha>0])
-
-
 
 class Opt_Struct:
     def __init__(self, data_mat, class_labels, C, toler):
-        self.x = data_mat
+        self.X = data_mat
         self.label_mat = class_labels
         self.C = C
         self.tol = toler
@@ -125,10 +120,10 @@ def updateEk(os, k):
     os.e_cache[k] = [1, Ek]
 
 
-def innerL(i ,os):
+def innerL(i, os):
     Ei = calc_ek(os, i)
-    if (os.label_mat[i]*E[i] < -os.tol and os.alphas[i] < os.C) or \
-            (os.label_mat[i]*E[i] > os.tol and os.alphas[i] > 0):
+    if (os.label_mat[i]*Ei < -os.tol and os.alphas[i] < os.C) or \
+            (os.label_mat[i]*Ei > os.tol and os.alphas[i] > 0):
         j, Ej = select_j(i, os, Ei)
         alpha_i_old = os.alphas[i].copy()
         alpha_j_old = os.alphas[j].copy()
@@ -155,10 +150,48 @@ def innerL(i ,os):
              - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.X[j, :] * os.X[j, :].T
         if 0 < os.alphas[i] and os.C > os.alphas[i]:
             os.b = b1
-        elif 0 < os.alphas[j] and C > os.alphas[j]:
+        elif 0 < os.alphas[j] and os.C > os.alphas[j]:
             os.b = b2
         else:
             os.b = (b1 + b2) / 2
         return 1
     else:
         return 0
+
+
+def smo_p(data_mat, class_labels, C, toler, max_iter, k_typ=('lin',0)):
+    os = Opt_Struct(np.mat(data_mat), np.mat(class_labels).transpose(), C, toler)
+    iter = 0
+    entire_set = True; alpha_changed = 0
+    while iter < max_iter and (alpha_changed > 0  or entire_set):
+        alpha_changed = 0
+        if entire_set:
+            for i in range(os.m):
+                alpha_changed += innerL(i, os)
+                print(' full_set, iter: %d , i: %d , pairs changed: %d'% \
+                    (iter, i, alpha_changed))
+            iter += 1
+        else:
+            non_bound = np.zeros((os.alphas.A > 0) * (os.alphas.A < C))[0]
+            for i in non_bound:
+                alpha_changed += innerL(i, os)
+                print(' full_set, iter: %d , i: %d , pairs changed: %d' % \
+                      (iter, i, alpha_changed))
+            iter +=1
+        if entire_set: entire_set = False
+        elif alpha_changed == 0: entire_set = True
+        print('iteration number : %d' %iter)
+    return os.b, os.alphas
+
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    b, alpha = smo_simple(data_x, y, 1, 0.1, 400)
+    print(alpha[alpha > 0])
+
