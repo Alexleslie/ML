@@ -77,5 +77,88 @@ def smo_simple(data_mat, class_label, C, toler, maxiter):
     return b, alphas
 
 
-b, alpha = smo_simple(data_x, y, 1, 0.1, 400)
-print(alpha[alpha>0])
+if __name__ == '__main__':
+    b, alpha = smo_simple(data_x, y, 1, 0.1, 400)
+    print(alpha[alpha>0])
+
+
+
+class Opt_Struct:
+    def __init__(self, data_mat, class_labels, C, toler):
+        self.x = data_mat
+        self.label_mat = class_labels
+        self.C = C
+        self.tol = toler
+        self.m = np.shape(data_mat)[0]
+        self.alphas = np.mat(np.zeros((self.m, 1)))
+        self.b = 0
+        self.e_cache = np.mat(np.zeros(self.m, 2))
+
+
+def calc_ek(os, k):
+    fxk = float(np.multiply(os.alpha, os.label_mat).T *\
+                (os.X*os.X[k, :].T)) + os.b
+    Ek = fxk - float(os.label_mat[k])
+    return Ek
+
+
+def select_j(i, os, Ei):
+    max_k = -1; max_deltae = 0; Ej = 0
+    os.e_cache[i] = [1, Ei]
+    valid_cache_list = np.nonzero(os.e_cache[:, 0].A)[0]
+    if len(valid_cache_list) > 1:
+        for k in valid_cache_list:
+            if k == i: continue
+            Ek = calc_ek(os, k)
+            deltae = abs(Ei-Ek)
+            if deltae > max_deltae:
+                max_k = k; max_deltae = deltae; Ej = Ek
+        return max_k, Ej
+    else:
+        j = select_rand(i, os.m)
+        Ej = calc_ek(os, j)
+    return j, Ej
+
+
+def updateEk(os, k):
+    Ek = calc_ek(os, k)
+    os.e_cache[k] = [1, Ek]
+
+
+def innerL(i ,os):
+    Ei = calc_ek(os, i)
+    if (os.label_mat[i]*E[i] < -os.tol and os.alphas[i] < os.C) or \
+            (os.label_mat[i]*E[i] > os.tol and os.alphas[i] > 0):
+        j, Ej = select_j(i, os, Ei)
+        alpha_i_old = os.alphas[i].copy()
+        alpha_j_old = os.alphas[j].copy()
+        if os.label_mat[i] != os.label_mat[j]:
+            L = max(0, os.alphas[i] - os.alphas[j])
+            H = min(os.C, os.C + os.alphas[j] - os.alphas[i])
+        else:
+            L = max(0, os.alphas[j] + os.alphas[i] - os.C)
+            H = min(os.C, os.alphas[j] + os.alphas[i])
+        if L==H: print('L==H'); return 0
+        eta = 2.0 * os.X[i, :] * os.X[j, :].T - os.X[i, :] * os.X[i, :].T \
+              - os.X[j, :] * os.X[j, :].T
+        if eta >=0: print('eta>=0'); return 0
+        os.alphas[j] -= os.label_mat[j] * (Ei - Ej) / eta
+        os.alphas[j] = clip_alpha(os.alphas[j], H, L)
+        updateEk(os, j)
+        if abs(os.alphas[j] -alpha_j_old ) < 0.00001:
+            print('j not moving enough'); return 0
+        os.alphas[i] += os.label_mat[j] * os.label_mat[i] * (alpha_j_old - os.alphas[j])
+        updateEk(os, i)
+        b1 = os.b - Ei - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.X[i, :] * os.X[i, :].T \
+             - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.X[i, :] * os.X[j, :].T
+        b2 = os.b - Ej - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.X[i, :] * os.X[j, :].T \
+             - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.X[j, :] * os.X[j, :].T
+        if 0 < os.alphas[i] and os.C > os.alphas[i]:
+            os.b = b1
+        elif 0 < os.alphas[j] and C > os.alphas[j]:
+            os.b = b2
+        else:
+            os.b = (b1 + b2) / 2
+        return 1
+    else:
+        return 0
