@@ -73,8 +73,9 @@ def smo_simple(data_mat, class_label, C, toler, maxiter):
             iter += 1
         else:
             iter = 0
-        print('iteration number : %d' %  iter)
+        print('iteration number : %d' % iter)
     return b, alphas
+
 
 b, alpha = smo_simple(data_x, y, 1, 0.1, 400)
 print(alpha[alpha>0])
