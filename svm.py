@@ -1,15 +1,8 @@
 import random
 from sklearn.datasets import load_iris
 import numpy as np
+from cross_validate import  accuracy
 
-
-data_x, data_y = load_iris().data[:60], load_iris().target[:60]
-y = np.zeros(len(data_y))
-for i in range(len(data_y)):
-    if i==1:
-        y[i] =1
-    else:
-        y[i]=-1
 
 
 def select_rand(i, m):
@@ -87,11 +80,11 @@ class Opt_Struct:
         self.m = np.shape(data_mat)[0]
         self.alphas = np.mat(np.zeros((self.m, 1)))
         self.b = 0
-        self.e_cache = np.mat(np.zeros(self.m, 2))
+        self.e_cache = np.mat(np.zeros((self.m, 2)))
 
 
 def calc_ek(os, k):
-    fxk = float(np.multiply(os.alpha, os.label_mat).T *\
+    fxk = float(np.multiply(os.alphas, os.label_mat).T *\
                 (os.X*os.X[k, :].T)) + os.b
     Ek = fxk - float(os.label_mat[k])
     return Ek
@@ -163,7 +156,7 @@ def smo_p(data_mat, class_labels, C, toler, max_iter, k_typ=('lin',0)):
     os = Opt_Struct(np.mat(data_mat), np.mat(class_labels).transpose(), C, toler)
     iter = 0
     entire_set = True; alpha_changed = 0
-    while iter < max_iter and (alpha_changed > 0  or entire_set):
+    while iter < max_iter and (alpha_changed > 0 or entire_set):
         alpha_changed = 0
         if entire_set:
             for i in range(os.m):
@@ -172,26 +165,50 @@ def smo_p(data_mat, class_labels, C, toler, max_iter, k_typ=('lin',0)):
                     (iter, i, alpha_changed))
             iter += 1
         else:
-            non_bound = np.zeros((os.alphas.A > 0) * (os.alphas.A < C))[0]
+            non_bound = np.nonzero((os.alphas.A > 0) * (os.alphas.A < C))[0]
             for i in non_bound:
                 alpha_changed += innerL(i, os)
                 print(' full_set, iter: %d , i: %d , pairs changed: %d' % \
                       (iter, i, alpha_changed))
             iter +=1
-        if entire_set: entire_set = False
+        if entire_set:  entire_set = False
         elif alpha_changed == 0: entire_set = True
         print('iteration number : %d' %iter)
     return os.b, os.alphas
 
 
-
-
-
-
-
+def calcWs(alpha, data, class_labels):
+    x = np.mat(data); labels = np.mat(class_labels).transpose()
+    m, n = np.shape(x)
+    w = np.zeros((n, 1))
+    for i in range(m):
+        w += np.multiply(alpha[i]*labels[i], x[i, :].T)
+    return w
 
 
 if __name__ == '__main__':
-    b, alpha = smo_simple(data_x, y, 1, 0.1, 400)
-    print(alpha[alpha > 0])
+    data_x, data_y = load_iris().data[:100], load_iris().target[:100]
+    y = np.zeros(len(data_y))
+
+    for i in range(len(data_y)):
+        if data_y[i] == 1:
+            y[i] = 1
+        else:
+            y[i] = -1
+
+    b, alpha = smo_p(data_x, y, 1, 0.001, 40)
+
+    print(alpha[alpha>0])
+    w = np.mat(calcWs(alpha, data_x, y))
+    print(b, w)
+    result = []
+    for i in range(len(y)):
+        prediction = data_x[i] * w + b
+        if prediction > 0:
+            result.append(1)
+        else:
+            result.append(-1)
+    print(result)
+    print(accuracy(result, y))
+
 

@@ -15,10 +15,11 @@ def accuracy(predict, y):
     FP = [y[i] for i in range(len(y)) if y[i] != 0 and y[i] != predict[i]]
     FN = [y[i] for i in range(len(y)) if y[i] == 1 and y[i] != predict[i]]
 
-    P = len(TP)/ (len(TP) + len(FP))
-    R = len(TP)/ (len(TP) + len(FN))
-
-    return P, R
+    count = 0
+    for i, j in zip(list(predict), list(y)):
+        if i == j:
+            count += 1
+    return count / len(y)
 
 def cross(data_x, data_y, rate=0.3):
     '''

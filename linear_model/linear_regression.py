@@ -1,5 +1,5 @@
 from sklearn.datasets import load_diabetes
-from ch2.cross_validate import cross
+from .. import cross_validate
 import numpy as np
 
 class Linear_Regress:
@@ -66,7 +66,7 @@ class Linear_Regress:
 
 if __name__ == '__main__':
     iris = load_diabetes()
-    train_x, train_y, test_x, test_y = cross(iris.data, iris.target)
+    train_x, train_y, test_x, test_y = cross_validate.cross(iris.data, iris.target)
 
     rge = Linear_Regress(0.01, 400)
     theta = rge.fit(train_x, train_y)
