@@ -72,7 +72,7 @@ def smo_simple(data_mat, class_label, C, toler, maxiter):
 
 
 class Opt_Struct:
-    def __init__(self, data_mat, class_labels, C, toler):
+    def __init__(self, data_mat, class_labels, C, toler, k_tup):
         self.X = data_mat
         self.label_mat = class_labels
         self.C = C
@@ -81,6 +81,10 @@ class Opt_Struct:
         self.alphas = np.mat(np.zeros((self.m, 1)))
         self.b = 0
         self.e_cache = np.mat(np.zeros((self.m, 2)))
+        self.K = np.mat(np.zeros((self.m, self.m)))
+        for i in range(self.m):
+            self.K[:, i] = kernel(self.X, self.X[i,:], k_tup)
+
 
 
 def calc_ek(os, k):
@@ -177,6 +181,23 @@ def smo_p(data_mat, class_labels, C, toler, max_iter, k_typ=('lin',0)):
     return os.b, os.alphas
 
 
+def kernel(X, A, k_tup):
+    m, n = np.shape(X)
+    K = np.mat(np.zeros((m, 1)))
+    if k_tup[0] == 'lin': K = X*A.T
+    elif k_tup[0] == 'rbf':
+        for j in range(m):
+            delta_row = X[j, :] - A
+            K[j] = delta_row * delta_row.T
+        K = np.exp(K / (-1*k_tup[1]**2))
+    else: raise NameError('That kernel is not recognized')
+    return K
+
+
+
+
+
+
 def calcWs(alpha, data, class_labels):
     x = np.mat(data); labels = np.mat(class_labels).transpose()
     m, n = np.shape(x)
@@ -184,6 +205,9 @@ def calcWs(alpha, data, class_labels):
     for i in range(m):
         w += np.multiply(alpha[i]*labels[i], x[i, :].T)
     return w
+
+
+
 
 
 if __name__ == '__main__':
