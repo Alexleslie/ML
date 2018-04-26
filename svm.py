@@ -86,10 +86,8 @@ class Opt_Struct:
             self.K[:, i] = kernel(self.X, self.X[i,:], k_tup)
 
 
-
 def calc_ek(os, k):
-    fxk = float(np.multiply(os.alphas, os.label_mat).T *\
-                (os.X*os.X[k, :].T)) + os.b
+    fxk = float(np.multiply(os.alphas, os.label_mat).T * os.K[:, k] + os.b)
     Ek = fxk - float(os.label_mat[k])
     return Ek
 
@@ -131,8 +129,7 @@ def innerL(i, os):
             L = max(0, os.alphas[j] + os.alphas[i] - os.C)
             H = min(os.C, os.alphas[j] + os.alphas[i])
         if L==H: print('L==H'); return 0
-        eta = 2.0 * os.X[i, :] * os.X[j, :].T - os.X[i, :] * os.X[i, :].T \
-              - os.X[j, :] * os.X[j, :].T
+        eta = 2.0 * os.K[i, j] - os.K[i, i] - os.K[j, j]
         if eta >=0: print('eta>=0'); return 0
         os.alphas[j] -= os.label_mat[j] * (Ei - Ej) / eta
         os.alphas[j] = clip_alpha(os.alphas[j], H, L)
@@ -141,10 +138,10 @@ def innerL(i, os):
             print('j not moving enough'); return 0
         os.alphas[i] += os.label_mat[j] * os.label_mat[i] * (alpha_j_old - os.alphas[j])
         updateEk(os, i)
-        b1 = os.b - Ei - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.X[i, :] * os.X[i, :].T \
-             - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.X[i, :] * os.X[j, :].T
-        b2 = os.b - Ej - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.X[i, :] * os.X[j, :].T \
-             - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.X[j, :] * os.X[j, :].T
+        b1 = os.b - Ei - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.K[i, i] \
+             - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.K[i, j]
+        b2 = os.b - Ej - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.K[i, j] \
+             - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.K[j, j]
         if 0 < os.alphas[i] and os.C > os.alphas[i]:
             os.b = b1
         elif 0 < os.alphas[j] and os.C > os.alphas[j]:
@@ -157,7 +154,7 @@ def innerL(i, os):
 
 
 def smo_p(data_mat, class_labels, C, toler, max_iter, k_typ=('lin',0)):
-    os = Opt_Struct(np.mat(data_mat), np.mat(class_labels).transpose(), C, toler)
+    os = Opt_Struct(np.mat(data_mat), np.mat(class_labels).transpose(), C, toler, k_typ)
     iter = 0
     entire_set = True; alpha_changed = 0
     while iter < max_iter and (alpha_changed > 0 or entire_set):
@@ -194,19 +191,44 @@ def kernel(X, A, k_tup):
     return K
 
 
-
-
-
-
-def calcWs(alpha, data, class_labels):
+def calcWs(alpha, data, class_labels, test_x, k='lin'):
     x = np.mat(data); labels = np.mat(class_labels).transpose()
+    svind = np.nonzero(alpha.A > 0)[0]
+    svs = x[svind]
+    labelsv = labels[svind]
+
     m, n = np.shape(x)
     w = np.zeros((n, 1))
+
+    temp = np.multiply(labelsv, alpha[svind])
+    if k == 'lin':
+        w += svs.T * temp
+        prediction  = []
+        for i in test_x:
+            predi = i * w
+            prediction.append(predi)
+        #prediction = np.dot(test_x, w)
+        return prediction
+    else:
+        pass
+
+
+def testrbf(b, alphas, data, label, k=('rbf', 1.0)):
+    data_mat = np.mat(data); label_mat = np.mat(label).transpose()
+    svind = np.nonzero(alpha.A>0)[0]
+    svs  = data_mat[svind]
+    labelsv = label_mat[svind]
+
+    m, n = np.shape(data_mat)
+    result = []
     for i in range(m):
-        w += np.multiply(alpha[i]*labels[i], x[i, :].T)
-    return w
-
-
+        kerneleval = kernel(svs, data_mat[i, :], k)
+        prediction = kerneleval.T * np.multiply(labelsv, alphas[svind]) + b
+        if prediction > 0:
+            result.append(1)
+        else:
+            result.append(-1)
+    return result
 
 
 
@@ -220,19 +242,18 @@ if __name__ == '__main__':
         else:
             y[i] = -1
 
-    b, alpha = smo_p(data_x, y, 1, 0.001, 40)
+    b, alpha = smo_p(data_x, y, 200, 0.001, 40, ('rbf', 1.0))
 
-    print(alpha[alpha>0])
-    w = np.mat(calcWs(alpha, data_x, y))
+    w = np.mat(calcWs(alpha, data_x, y, data_x))
+    prediction = w + b
     print(b, w)
     result = []
-    for i in range(len(y)):
-        prediction = data_x[i] * w + b
-        if prediction > 0:
+    for i in prediction:
+        if i > 0:
             result.append(1)
         else:
             result.append(-1)
+    #result = testrbf(b, alpha, data_x, y)
     print(result)
     print(accuracy(result, y))
-
 
