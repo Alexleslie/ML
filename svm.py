@@ -191,7 +191,7 @@ def kernel(X, A, k_tup):
     return K
 
 
-def calcWs(alpha, data, class_labels, test_x, k='lin'):
+def calcWs(alpha, data, class_labels, test_x, k=('lin', 1.0)):
     x = np.mat(data); labels = np.mat(class_labels).transpose()
     svind = np.nonzero(alpha.A > 0)[0]
     svs = x[svind]
@@ -201,40 +201,22 @@ def calcWs(alpha, data, class_labels, test_x, k='lin'):
     w = np.zeros((n, 1))
 
     temp = np.multiply(labelsv, alpha[svind])
-    if k == 'lin':
-        w += svs.T * temp
-        prediction  = []
-        for i in test_x:
-            predi = i * w
-            prediction.append(predi)
-        #prediction = np.dot(test_x, w)
+    if k[0] == 'lin':
+        w += np.mat(svs.T * temp)
+        prediction = np.dot(test_x, w)
         return prediction
     else:
-        pass
-
-
-def testrbf(b, alphas, data, label, k=('rbf', 1.0)):
-    data_mat = np.mat(data); label_mat = np.mat(label).transpose()
-    svind = np.nonzero(alpha.A>0)[0]
-    svs  = data_mat[svind]
-    labelsv = label_mat[svind]
-
-    m, n = np.shape(data_mat)
-    result = []
-    for i in range(m):
-        kerneleval = kernel(svs, data_mat[i, :], k)
-        prediction = kerneleval.T * np.multiply(labelsv, alphas[svind]) + b
-        if prediction > 0:
-            result.append(1)
-        else:
-            result.append(-1)
-    return result
-
+        prediction = np.zeros((m, 1))
+        for i in range(m):
+            kernel_value = kernel(svs, test_x[i, :], k)
+            prediction[i] = (kernel_value.T * temp)
+        return prediction
 
 
 if __name__ == '__main__':
     data_x, data_y = load_iris().data[:100], load_iris().target[:100]
     y = np.zeros(len(data_y))
+    k = ('rbf', 1.0)
 
     for i in range(len(data_y)):
         if data_y[i] == 1:
@@ -242,13 +224,14 @@ if __name__ == '__main__':
         else:
             y[i] = -1
 
-    b, alpha = smo_p(data_x, y, 200, 0.001, 40, ('rbf', 1.0))
+    b, alpha = smo_p(data_x, y, 200, 0.001, 40, k)
 
-    w = np.mat(calcWs(alpha, data_x, y, data_x))
-    prediction = w + b
-    print(b, w)
+    data_x2 = np.copy(data_x)
+    w = np.mat(calcWs(alpha, data_x, y, data_x2, k))
+    prediction2 = w + b
+
     result = []
-    for i in prediction:
+    for i in prediction2:
         if i > 0:
             result.append(1)
         else:
