@@ -1,9 +1,8 @@
 import random
 from sklearn.datasets import load_iris
 import numpy as np
-from cross_validate import  accuracy
-
-
+from cross_validate import accuracy
+from sklearn.model_selection import train_test_split
 
 def select_rand(i, m):
     j = i
@@ -138,13 +137,13 @@ def innerL(i, os):
             print('j not moving enough'); return 0
         os.alphas[i] += os.label_mat[j] * os.label_mat[i] * (alpha_j_old - os.alphas[j])
         updateEk(os, i)
-        b1 = os.b - Ei - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.K[i, i] \
-             - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.K[i, j]
-        b2 = os.b - Ej - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.K[i, j] \
-             - os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.K[j, j]
-        if 0 < os.alphas[i] and os.C > os.alphas[i]:
+        b1 = os.b - Ei - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.K[i, i] -\
+            os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.K[i, j]
+        b2 = os.b - Ej - os.label_mat[i] * (os.alphas[i] - alpha_i_old) * os.K[i, j] -\
+            os.label_mat[j] * (os.alphas[j] - alpha_j_old) * os.K[j, j]
+        if (0 < os.alphas[i]) and (os.C > os.alphas[i]):
             os.b = b1
-        elif 0 < os.alphas[j] and os.C > os.alphas[j]:
+        elif (0 < os.alphas[j]) and (os.C > os.alphas[j]):
             os.b = b2
         else:
             os.b = (b1 + b2) / 2
@@ -208,13 +207,17 @@ def calcWs(alpha, data, class_labels, test_x, k=('lin', 1.0)):
     else:
         prediction = np.zeros((m, 1))
         for i in range(m):
-            kernel_value = kernel(svs, test_x[i, :], k)
-            prediction[i] = (kernel_value.T * temp)
+            try:
+                kernel_value = kernel(svs, test_x[i, :], k)
+                prediction[i] = (kernel_value.T * temp)
+            except:
+                pass
         return prediction
 
 
 if __name__ == '__main__':
     data_x, data_y = load_iris().data[:100], load_iris().target[:100]
+
     y = np.zeros(len(data_y))
     k = ('rbf', 1.0)
 
@@ -224,19 +227,20 @@ if __name__ == '__main__':
         else:
             y[i] = -1
 
-    b, alpha = smo_p(data_x, y, 200, 0.001, 40, k)
+    train_x, test_x, train_y, test_y = train_test_split(data_x, y)
 
-    data_x2 = np.copy(data_x)
-    w = np.mat(calcWs(alpha, data_x, y, data_x2, k))
-    prediction2 = w + b
+    b, alpha = smo_p(train_x, train_y, 200, 0.001, 50, k)
+
+    w = np.mat(calcWs(alpha, train_x, train_y, test_x, k))
+    prediction = w + b
 
     result = []
-    for i in prediction2:
+    for i in prediction:
         if i > 0:
             result.append(1)
         else:
             result.append(-1)
-    #result = testrbf(b, alpha, data_x, y)
+
     print(result)
-    print(accuracy(result, y))
+    print(accuracy(result, test_y))
 
