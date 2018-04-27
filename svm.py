@@ -227,8 +227,8 @@ def data_process(data):
 
 
 
-def predict(train_x, train_y, test_x, k, max_iters):
-    b, alphas = smo_p(train_x, train_y, 10, 0.001, max_iters, k)
+def predict(train_x, train_y, test_x, k, max_iters, c, toler):
+    b, alphas = smo_p(train_x, train_y, c, toler, max_iters, k)
     inner_pro = np.mat(calcWs(alphas, train_x, train_y, test_x, k))
     prediction = inner_pro + b
     result = []
@@ -242,13 +242,15 @@ def predict(train_x, train_y, test_x, k, max_iters):
 
 if __name__ == '__main__':
     data_x, data_y = load_iris().data[:100], load_iris().target[:100]
-    data_y = data_process(data_y)
+    data_y = data_process(data_y)  # 将正负样本标签转化为1 或者 -1
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y)
 
-    k = ('lin', 1.0)
-    iterations = 100
+    k = ('rbf', 1.0)  # 核方法： lin 线性模型; rbf 径向基核函数;
+    iterations = 100  # 迭代次数
+    c = 100  # 最大函数间隔
+    toler = 0.001  # 容错率
 
-    result = predict(train_x, train_y, test_x, k, iterations)
+    result = predict(train_x, train_y, test_x, k, iterations, c, toler)
     print(result)
     print(accuracy(result, test_y))
 
