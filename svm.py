@@ -4,6 +4,7 @@ import numpy as np
 from cross_validate import accuracy
 from sklearn.model_selection import train_test_split
 
+
 def select_rand(i, m):
     j = i
     while j == i:
@@ -215,32 +216,39 @@ def calcWs(alpha, data, class_labels, test_x, k=('lin', 1.0)):
         return prediction
 
 
-if __name__ == '__main__':
-    data_x, data_y = load_iris().data[:100], load_iris().target[:100]
-
-    y = np.zeros(len(data_y))
-    k = ('rbf', 1.0)
-
-    for i in range(len(data_y)):
-        if data_y[i] == 1:
+def data_process(data):
+    y = np.zeros(len(data))
+    for i in range(len(data)):
+        if data[i] == 1:
             y[i] = 1
         else:
             y[i] = -1
+    return y
 
-    train_x, test_x, train_y, test_y = train_test_split(data_x, y)
 
-    b, alpha = smo_p(train_x, train_y, 200, 0.001, 50, k)
 
-    w = np.mat(calcWs(alpha, train_x, train_y, test_x, k))
-    prediction = w + b
-
+def predict(train_x, train_y, test_x, k, max_iters):
+    b, alphas = smo_p(train_x, train_y, 10, 0.001, max_iters, k)
+    inner_pro = np.mat(calcWs(alphas, train_x, train_y, test_x, k))
+    prediction = inner_pro + b
     result = []
     for i in prediction:
         if i > 0:
             result.append(1)
         else:
             result.append(-1)
+    return result
 
+
+if __name__ == '__main__':
+    data_x, data_y = load_iris().data[:100], load_iris().target[:100]
+    data_y = data_process(data_y)
+    train_x, test_x, train_y, test_y = train_test_split(data_x, data_y)
+
+    k = ('lin', 1.0)
+    iterations = 100
+
+    result = predict(train_x, train_y, test_x, k, iterations)
     print(result)
     print(accuracy(result, test_y))
 
