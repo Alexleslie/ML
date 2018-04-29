@@ -1,8 +1,9 @@
-
 import tensorflow as tf
 from tensorflow.contrib import rnn
 from tensorflow.examples.tutorials.mnist import input_data
 mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
+
+print(mnist)
 
 config = tf.ConfigProto()
 sess = tf.Session(config=config)
@@ -47,5 +48,14 @@ sess.run(tf.global_variables_initializer())
 for i in range(1000):
     _batch_size = 128
     batch = mnist.train.next_batch(_batch_size)
+    if (i+1) % 200 == 0:
+        train_accuracy = sess.run(accuracy, feed_dict={
+            _X:batch[0], y:batch[1], keep_prob:1.0, batch_size:_batch_size
+        })
+        print('Iters %d, step %d, training accuracy %g' % (mnist.train.epochs_completed,
+                                                           (i+1), train_accuracy))
     sess.run(train_op, feed_dict={_X:batch[0], y:batch[1], keep_prob:0.5, batch_size:_batch_size})
 
+print('test accuracy %g'% sess.run(accuracy, feed_dict={
+    _X:mnist.test.images, y:mnist.test.labels, keep_prob:1.0, batch_size:mnist.test.images.shape[0]
+}))
