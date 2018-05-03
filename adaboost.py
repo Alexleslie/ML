@@ -89,17 +89,26 @@ def ada_classify(dat_to_class, classifiter_arr):
     return sign(agg_class_est)
 
 
+class AdaBoost:
+    def fit(self, train_x, train_y):
+        classifier_array = ada_boost(train_x, train_y)
+        self.clf_arr = classifier_array
+
+    def predict(self, test_x):
+        prediction = []
+        for i in test_x:
+            predicts = ada_classify(i, self.clf_arr)
+            prediction.append(predicts.min())
+        return prediction
+
 
 if __name__ == '__main__':
     data_x, data_y = load_iris().data[:100], load_iris().target[:100]
     data_y = data_process(data_y)
     train_x, test_x, train_y, test_y = train_test_split(data_x, data_y)
-    classifier_array = ada_boost(train_x, train_y)
-    print(classifier_array)
-    prediction = []
-    for i in test_x:
-        predict = ada_classify(i, classifier_array)
-        prediction.append(predict.min())
+    clf = AdaBoost()
+    clf.fit(train_x, train_y)
+    prediction = clf.predict(test_x)
     print(prediction)
     print(accuracy_score(test_y, prediction))
 
