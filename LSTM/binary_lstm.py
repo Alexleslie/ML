@@ -65,8 +65,8 @@ for j in range(10000):
         layer_1 = layer_1_values[-position-1]
         prev_layer_1 = layer_1_values[-position-2]
         layer_2_delta = layer_2_deltas[-position-1]
-        layer_1_delta = (future_layer_1_delta.dot(synapse_h.T) + layer_2_delta.dot
-        (synapse_1.T)) * sigmoid_output_to_derivative(layer_1)
+        layer_1_delta = (future_layer_1_delta.dot(synapse_h.T) + layer_2_delta.dot(synapse_1.T))\
+                        * sigmoid_output_to_derivative(layer_1)
 
         synapse_1_update += np.atleast_2d(layer_1).T.dot(layer_2_delta)
         synapse_h_update += np.atleast_2d(prev_layer_1).T.dot(layer_1_delta)
