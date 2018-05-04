@@ -46,6 +46,7 @@ for j in range(10000):
     layer_2_deltas = list()
     layer_1_values = list()
     layer_1_values.append(np.zeros(hidden_dim))
+    future_layer_1_delta = np.zeros(hidden_dim)
 
     for position in range(binary_dim):
         X = np.array([[a[binary_dim - position - 1], b[binary_dim - position - 1]]])
@@ -54,11 +55,11 @@ for j in range(10000):
         layer_2 = sigmoid(np.dot(layer_1, synapse_1))
 
         layer_2_error = y - layer_2
-        layer_2_deltas.append((layer_2_error)*sigmoid_output_to_derivative(layer_2))
+        layer_2_deltas.append(layer_2_error*sigmoid_output_to_derivative(layer_2))
         overall_error += np.abs(layer_2_error[0])
         d[binary_dim - position - 1] = np.round(layer_2[0][0])
         layer_1_values.append(copy.deepcopy(layer_1))
-        future_layer_1_delta = np.zeros(hidden_dim)
+
     for position in range(binary_dim):
         X = np.array([[a[position], b[position]]])
         layer_1 = layer_1_values[-position-1]
