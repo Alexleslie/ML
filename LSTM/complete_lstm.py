@@ -102,5 +102,35 @@ class LstmNode:
         self.x = x
         self.xc = xc
 
+    def top_diff_is(self, top_diff_h, top_diff_s):
+        ds = self.lstm_state.o * top_diff_h + top_diff_s
+        do = self.lstm_state.s * top_diff_h
+        di = self.lstm_state.g * ds
+        dg = self.lstm_state.i * ds
+        df = self.s_prev * ds
+
+        di_input = (1. - self.lstm_state.i) * self.lstm_state.i * di
+        df_input = (1. - self.lstm_state.f) * self.lstm_state.f * df
+        do_input = (1. - self.lstm_state.o) * self.lstm_state.o * do
+        dg_input = (1. - self.lstm_state.g**2) * dg
+
+        self.lstm_param.wi_diff += np.outer(di_input, self.xc)
+        self.lstm_param.wf_diff += np.outer(df_input, self.xc)
+        self.lstm_param.wo_diff += np.outer(do_input, self.xc)
+        self.lstm_param.wg_diff += np.outer(dg_input, self.xc)
+
+        self.lstm_param.bi_diff += di_input
+        self.lstm_param.bf_diff += df_input
+        self.lstm_param.bo_diff += do_input
+        self.lstm_param.bg_diff += dg_input
+
+        dxc = np.zeros(self.xc)
+        dxc += np.dot(self.lstm_param.wi.T, di_input)
+        dxc += np.dot(self.lstm_param.wf.T, df_input)
+        dxc += np.dot(self.lstm_param.wo.T, do_input)
+        dxc += np.dot(self.lstm_param.wg.T, dg_input)
+
+        self.lstm_param.bottom_diff_s = ds * self.lstm_state.f
+        self.lstm_param.bottom_diff_h = dxc[self.lstm_param.x_dim:]
 
 
