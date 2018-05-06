@@ -60,4 +60,47 @@ class LstmParam:
         self.bo_diff = np.zeros_like(self.bo)
 
 
+class LstmState:
+    def __init__(self, mem_cell_bt, x_dim):
+        self.g = np.zeros(mem_cell_bt)
+        self.i = np.zeros(mem_cell_bt)
+        self.f = np.zeros(mem_cell_bt)
+        self.o = np.zeros(mem_cell_bt)
+        self.s = np.zeros(mem_cell_bt)
+        self.h = np.zeros(mem_cell_bt)
+
+        self.bottom_diff_h = np.zeros_like(self.h)
+        self.bottom_diff_s = np.zeros_like(self.s)
+        self.bottom_diff_x = np.zeros(x_dim)
+
+
+class LstmNode:
+    def __init__(self, lstm_param, lstm_state):
+        self.lstm_param = lstm_param
+        self.lstm_state = lstm_state
+
+        self.x = None
+        self.xc = None
+
+    def bottom_data_is(self, x, s_prev=None, h_prev=None):
+        if s_prev == None: self.s_prev = np.zeros_like(self.lstm_state.s)
+        if h_prev == None: self.h_prev = np.zeros_like(self.lstm_state.h)
+
+        self.s_prev = s_prev
+        self.h_prev = h_prev
+
+        xc = np.hstack((x, h_prev))
+
+        self.lstm_state.g = np.tanh(np.dot(self.lstm_param.wg, xc) + self.lstm_param.bg)
+        self.lstm_state.i = sigmoid(np.dot(self.lstm_param.wi, xc) + self.lstm_param.bi)
+        self.lstm_state.f = sigmoid(np.dot(self.lstm_param.wf, xc) + self.lstm_param.bf)
+        self.lstm_state.o = sigmoid(np.dot(self.lstm_param.wo, xc) + self.lstm_param.bo)
+
+        self.lstm_state.s = self.lstm_state.g * self.lstm_state.i + s_prev * self.lstm_state.f
+        self.lstm_state.h = self.lstm_state.s * self.lstm_state.o
+
+        self.x = x
+        self.xc = xc
+
+
 
