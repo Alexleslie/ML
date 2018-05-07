@@ -134,3 +134,54 @@ class LstmNode:
         self.lstm_param.bottom_diff_h = dxc[self.lstm_param.x_dim:]
 
 
+class LstmNetwork:
+    def __init__(self, lstm_param):
+        self.lstm_param = lstm_param
+        self.lstm_node_list = []
+        self.x_list = []
+
+    def y_list_is(self, y_list, loss_layer):
+
+        assert len(y_list) == len(loss_layer)
+        idx = len(self.x_list) - 1
+        loss = loss_layer.loss(self.lstm_node_list[idx], y_list[idx])
+
+        diff_h = loss_layer.bottom_diff(self.lstm_node_list[idx].state.h, y_list[idx])
+        diff_s = np.zeros(self.lstm_param.mem_cell_ct)
+        self.lstm_node_list[idx].top_diff_is(diff_h, diff_s)
+        idx -= 1
+        while idx >= 0:
+            loss += loss_layer.loss(self.lstm_node_list[idx].state.h, y_list[idx])
+            diff_h = loss_layer.bottom_diff(self.lstm_node_list[idx].state.h, y_list[idx])
+            diff_h += self.lstm_node_list[idx + 1].state.bottom_diff_h
+            diff_s = self.lstm_node_list[idx + 1].state.bottom_diff_s
+
+            self.lstm_node_list[idx].top_diff_is(diff_h, diff_s)
+
+            idx -= 1
+        return loss
+
+    def x_list_clear(self):
+        self.x_list = []
+
+    def x_list_add(self, x):
+        self.x_list.append(x)
+        if len(self.x_list) > len(self.lstm_node_list):
+            lstm_state = LstmState(self.lstm_param.mem_cell_ct, self.lstm_param.x_dim)
+            self.lstm_node_list.append(LstmNode(self.lstm_param, lstm_state))
+
+        idx = len(self.x_list) - 1
+        if idx == 0:
+            self.lstm_node_list[idx].bottom_data_is(x)
+        else:
+            s_prev = self.lstm_node_list[idx - 1].state.s
+            h_prev = self.lstm_node_list[idx - 1].state.h
+            self.lstm_node_list[idx].bottom_data_is(x, s_prev, h_prev)
+
+
+
+
+
+
+
+
