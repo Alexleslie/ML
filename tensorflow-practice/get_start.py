@@ -1,4 +1,7 @@
 import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
+
+mnist = input_data.read_data_sets('/tmp/data/', one_hot=True)
 
 a = tf.constant(5)
 b = tf.constant(6)
@@ -11,7 +14,6 @@ print(result)
 '==========================================================='
 
 
-from tensorflow.examples.tutorials.mnist import input_data
 
 """
 input > weight > hidden layer 1 (activation function ) > weight > hidden layer 2 (activation)> weight > output layer
@@ -26,7 +28,7 @@ feed forward + backprop = epoch
 
 """
 
-x = tf.placeholder(float, [None, 784])
+x = tf.placeholder(tf.float32, [None, 784])
 y = tf.placeholder(float)
 
 n_notes_h1 = 500
@@ -51,13 +53,13 @@ def neural_network_model(data):
     output_layer = {'weights': tf.Variable(tf.random_normal(n_notes_h3, n_classes)),
                     'biases': tf.Variable(tf.random_normal(n_classes))}
 
-    l1 = tf.add(tf.matmul(data, hidden_layer_1['weights']) + hidden_layer_1['biases'])
+    l1 = tf.add(tf.matmul(data, hidden_layer_1['weights']),  hidden_layer_1['biases'])
     l1 = tf.nn.relu(l1)
 
-    l2 = tf.add(tf.matmul(l1, hidden_layer_2['weights']) + hidden_layer_2['biases'])
+    l2 = tf.add(tf.matmul(l1, hidden_layer_2['weights']), hidden_layer_2['biases'])
     l2 = tf.nn.relu(l2)
 
-    l3 = tf.add(tf.matmul(l2, hidden_layer_3['weights']) + hidden_layer_3['biases'])
+    l3 = tf.add(tf.matmul(l2, hidden_layer_3['weights']), hidden_layer_3['biases'])
     l3 = tf.nn.relu(l3)
 
     output = tf.matmul(l3, output_layer['weights']) + output_layer['biases']
@@ -77,12 +79,16 @@ def train_neural_network(x):
 
         for epoch in hm_epochs:
             epoch_loss = 0
-            for _ in range(int(mnist.train.num_examples/batch_size))
+            for _ in range(int(mnist.train.num_examples/batch_size)):
                 x, y = mnist.train.next_batch(batch_size)
-                _, c = sess.run([optimizer, cost], feed_dict = {x:x, y:y})
+                _, c = sess.run([optimizer, cost], feed_dict={x: x, y: y})
                 epoch_loss = c
-            print('epoch'. epoch, 'completed out of ', hm_epochs, 'loss', epoch_loss)
-            
+            print('epoch', epoch, 'completed out of ', hm_epochs, 'loss', epoch_loss)
+
+        correct = tf.equal(tf.argmax(prediction, 1), tf.argmax(y, 1))
+        accuracy = tf.reduce_mean(tf.cast(correct, 'float'))
+
+        print('Accuracy', accuracy.eval({x: mnist.test.images, y: mnist.test.images}))
 
 
-
+train_neural_network(x)
