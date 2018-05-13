@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
-mnist = input_data.read_data_sets('/tmp/data/', one_hot=True)
+mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
 a = tf.constant(5)
 b = tf.constant(6)
@@ -28,7 +28,7 @@ feed forward + backprop = epoch
 
 """
 
-x = tf.placeholder(tf.float32, [None, 784])
+x = tf.placeholder(float, [None, 784])
 y = tf.placeholder(float)
 
 n_notes_h1 = 500
