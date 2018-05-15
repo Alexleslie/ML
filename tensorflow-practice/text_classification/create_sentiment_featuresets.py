@@ -7,7 +7,7 @@ import pickle
 from collections import Counter
 
 lemmatizer = WordNetLemmatizer()
-hm_lines = 1e6
+hm_lines = 100000
 
 
 def create_lexicon(pos, neg):
@@ -59,8 +59,8 @@ def create_feature_sets_and_labels(pos, neg, test_size=0.1):
     train_x = list(features[:, 0][:-testing_size])
     train_y = list(features[:, 1][:-testing_size])
 
-    test_x = list(features[:, 0][-testing_size])
-    test_y = list(features[:, 1][-testing_size])
+    test_x = list(features[:, 0][-testing_size:])
+    test_y = list(features[:, 1][-testing_size:])
 
     return train_x, train_y, test_x, test_y
 
