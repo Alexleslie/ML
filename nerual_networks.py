@@ -21,9 +21,7 @@ def calculate_loss(X, y, model):
     exp_scores = np.exp(z2)
     probs = exp_scores/np.sum(exp_scores, axis=1, keepdims=True)
 
-    input(probs[range(num_examples), y])
-
-    correct_logprobs = -np.log(probs[range(num_examples), y])
+    correct_logprobs = - np.log(probs[range(num_examples), y])
     data_loss = np.sum(correct_logprobs)
 
     data_loss += reg_lambda/2 * (np.sum(np.square(W1)) + np.sum(np.square(W2)))
