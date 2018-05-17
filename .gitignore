@@ -7,3 +7,4 @@ tensorflow-practice/text_classification/data/test_set.csv
 tensorflow-practice/text_classification/data/testdata.manual.2009.06.14.csv
 tensorflow-practice/text_classification/data/training.1600000.processed.noemoticon.csv
 tensorflow-practice/text_classification/data/train_set.csv
+*.pickle

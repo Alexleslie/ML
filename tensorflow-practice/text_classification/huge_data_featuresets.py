@@ -60,7 +60,29 @@ def create_lexicon(fin):
         except Exception as e:
             print(str(e))
 
-    with open('lexicon.pickle', 'wb') as f:
+    with open('data/lexicon.pickle', 'wb') as f:
         pickle.dump(lexicon, f)
 
+
+create_lexicon('data/train_set.csv')
+
+def create_test_data_pickle(fin):
+
+    feature_sets = []
+    labels = []
+    counter = 0
+    with open(fin, buffering=20000) as f:
+        for line in f:
+            try:
+                features = list(eval(line.split("::")[0]))
+                label = list(eval(line.split('::')[1]))
+
+                feature_sets.append(features)
+                label.append(label)
+                counter += 1
+            except:
+                pass
+    print(counter)
+    feature_sets = np.array(feature_sets)
+    labels = np.array(labels)
 
