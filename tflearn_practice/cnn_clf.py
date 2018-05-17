@@ -18,8 +18,8 @@ from tflearn.datasets import mnist
 
 X, train_y, test_x, test_y = mnist.load_data(one_hot=True)
 
-X.reshape([-1, 28, 28, 1])
-test_x.reshape([-1, 28, 28, 1])
+X = X.reshape([-1, 28, 28, 1])
+testx = test_x.reshape([-1, 28, 28, 1])
 
 network = input_data(shape=[None, 200, 50, 1], name='input')
 network = conv_2d(network, 32, 3, activation='relu', regularizer='L2')
