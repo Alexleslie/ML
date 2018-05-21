@@ -7,23 +7,13 @@ import numpy as np
 from tflearn.datasets import mnist
 
 
-train_f = np.load('data/train_x_12000_16.npy')
-train_y = np.load('data/train_y_12000_16.npy')
-test_f = np.load('data/test_x_12000_16.npy')
-test_y = np.load('data/test_y_12000_16.npy')
+X, train_y, test_x, test_y = mnist.load_data(one_hot=True)
 
-X = np.array(train_f)
-test_x = np.array(test_f)
-
-X = X.reshape([-1, 200, 16, 1])
-test_x = test_x.reshape([-1, 200, 16, 1])
-#
-# X, train_y, test_x, test_y = mnist.load_data(one_hot=True)
-#
-# X = X.reshape([-1, 28, 28, 1])
-# test_x = test_x.reshape([-1, 28, 28, 1])
+X = X.reshape([-1, 28, 28, 1])
+test_x = test_x.reshape([-1, 28, 28, 1])
 
 def lstm():
+	pass
 
 
 
